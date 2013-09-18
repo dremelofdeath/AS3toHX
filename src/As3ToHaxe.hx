@@ -131,10 +131,13 @@ class As3ToHaxe
         
         /* -----------------------------------------------------------*/
         // package with name
-        s = quickRegR(s, "package ([a-zA-Z\\.0-9-_]*)([\n\r]*){", "package $1;\n", "gs");
+        s = quickRegR(s, "package ([a-zA-Z\\.0-9-_]*)([\n\r\t ]*){", "package $1;\n", "gs");
         
         // package without name
-        s = quickRegR(s, "package([\n\r]*){", "package;\n", "gs");
+        s = quickRegR(s, "package([\n\r\t ]*){", "package;\n", "gs");
+
+        // remove all class-only references, which are for some reason legal in Flash
+        s = quickRegR(s, "^[\t ]*[A-Z][a-zA-Z0-9_]*;", "", "gm");
         
         // remove package close bracket 
         s = quickRegR(s, "\\}([\n\r\t ]*)\\}([\n\r\t ]*)$", "}", "gs");
@@ -173,6 +176,7 @@ class As3ToHaxe
         // casting
         s = quickRegR(s, "\\(([a-zA-Z0-9_]*) is ([a-zA-Z0-9_]*)", "(Std.is($1, $2)");
         s = quickRegR(s, "=([a-zA-Z0-9_]*) as ([a-zA-Z0-9_]*)", "=cast($1, $2)");
+        s = quickRegR(s, "=([a-zA-Z0-9_]*(\\(.*\\)))as ([a-zA-Z0-9_]*)", "=cast($1, $3)");
         
         s = quickRegR(s, " int\\(([a-zA-Z0-9_]*)", " Std.int($1");
         s = quickRegR(s, " Number\\(([a-zA-Z0-9_]*)", " Std.parseFloat($1");
@@ -244,10 +248,14 @@ class As3ToHaxe
         /* -----------------------------------------------------------*/
         
         // remap protected -> private & internal -> private
-        s = quickRegR(s, "protected var", "private var");
-        s = quickRegR(s, "internal var", "private var");
-        s = quickRegR(s, "protected function", "private function");
-        s = quickRegR(s, "internal function", "private function");  
+        s = quickRegR(s, "protected[ \t]var", "private var");
+        s = quickRegR(s, "internal[ \t]var", "private var");
+        s = quickRegR(s, "protected[ \t]const", "private const");
+        s = quickRegR(s, "internal[ \t]const", "private const");
+        s = quickRegR(s, "protected[ \t]function", "private function");
+        s = quickRegR(s, "internal[ \t]function", "private function");
+        s = quickRegR(s, "protected[ \t]override[ \t]function", "private override function");
+        s = quickRegR(s, "internal[ \t]override[ \t]function", "private override function");
         
         /* -----------------------------------------------------------*/
         
@@ -392,14 +400,19 @@ class As3ToHaxe
         /* -----------------------------------------------------------*/
         
         // remap for; <; next;
-        s = quickRegR(s, "for\\(var([ ]*)([a-zA-Z0-9_]*):([a-zA-Z0-9_]*)=([0-9]);([a-zA-Z0-9_]*)([<]*)([a-zA-Z0-9_.]*);([a-zA-Z0-9_.]*)([++]*)", "for($2 in $4...$7");
+        s = quickRegR(s, "for\\((var)?([ ]*)([a-zA-Z0-9_]+):?([a-zA-Z0-9_]*)=([0-9]+);([a-zA-Z0-9_]*)([<]*)([^;=]*);([a-zA-Z0-9_.]*)([++]*)", "for($3 in $5...$8");
         // remap for; <=; next;
-        s = quickRegR(s, "for\\(var([ ]*)([a-zA-Z0-9_]*):([a-zA-Z0-9_]*)=([0-9]);([a-zA-Z0-9_]*)([<=]*)([a-zA-Z0-9_.]*);([a-zA-Z0-9_.]*)([++]*)", "for($2 in $4...$7");
+        s = quickRegR(s, "for\\((var)?([ ]*)([a-zA-Z0-9_]+):?([a-zA-Z0-9_]*)=([0-9]+);([a-zA-Z0-9_]*)([<=]*)([^;=]*);([a-zA-Z0-9_.]*)([++]*)", "for($3 in $5...$8");
                        
         /* -----------------------------------------------------------*/
         
         // remap for each -> for
         s = quickRegR(s, "for each", "for");
+
+        /* -----------------------------------------------------------*/
+
+        // remap shortened nullary constructor calls
+        s = quickRegR(s, "new ([a-zA-Z0-9_]+[a-zA-Z0-9_<>]*)([^a-zA-Z0-9_(])", "new $1()$2", "gm");
                 
         /* -----------------------------------------------------------*/
                 
