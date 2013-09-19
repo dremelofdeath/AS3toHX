@@ -413,7 +413,8 @@ class As3ToHaxe
         
         // remap for in -> in
         s = quickRegR(s, "for\\(var[ ]+([a-zA-Z0-9_]+):[a-zA-Z0-9_]+[ ]+in[ ]+([a-zA-Z0-9_]+)[ ]*", "for($1 in $2");
-        
+        return s;
+
         /* -----------------------------------------------------------*/
         
         // remap for; <; next;
