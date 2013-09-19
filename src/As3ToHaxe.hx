@@ -106,19 +106,34 @@ class As3ToHaxe
     {        
         var fromFile = file;
         var toFile = to + "/" + file.substr(from.length + 1, file.lastIndexOf(".") - (from.length)) + "hx";
-        
+
         var rF = "";
         var rC = "";
-        
+
         var b = 0;
-        
+
         /* -----------------------------------------------------------*/
         // create the folder if it doesn''t exist
         var dir = toFile.substr(0, toFile.lastIndexOf("/"));
         createFolder(dir);
-        
+
         var s = sys.io.File.getContent(fromFile);
-        
+
+        s = processFileContents(s);
+        /* -----------------------------------------------------------*/
+
+        var o = sys.io.File.write(toFile, true);
+        o.writeString(s);
+        o.close();
+
+        /* -----------------------------------------------------------*/
+
+        // use for testing on a single file
+        //Sys.exit(1);
+    }
+
+    private function processFileContents(s:String):String
+    {
         /* -----------------------------------------------------------*/
         // space to tabs      
         s = quickRegR(s, "    ", "\t");
@@ -434,17 +449,8 @@ class As3ToHaxe
         {
             s = quickRegR(s, "\t", "    ");
         }
-        
-        /* -----------------------------------------------------------*/
-        
-        var o = sys.io.File.write(toFile, true);
-        o.writeString(s);
-        o.close();
-        
-        /* -----------------------------------------------------------*/
-        
-        // use for testing on a single file
-        //Sys.exit(1);
+
+        return s;
     }
     
     private function logLoopError(type:String, file:String)
