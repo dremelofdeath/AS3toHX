@@ -107,11 +107,6 @@ class As3ToHaxe
         var fromFile = file;
         var toFile = to + "/" + file.substr(from.length + 1, file.lastIndexOf(".") - (from.length)) + "hx";
 
-        var rF = "";
-        var rC = "";
-
-        var b = 0;
-
         /* -----------------------------------------------------------*/
         // create the folder if it doesn''t exist
         var dir = toFile.substr(0, toFile.lastIndexOf("/"));
@@ -119,7 +114,7 @@ class As3ToHaxe
 
         var s = sys.io.File.getContent(fromFile);
 
-        s = processFileContents(s);
+        s = processFileContents(s, file);
         /* -----------------------------------------------------------*/
 
         var o = sys.io.File.write(toFile, true);
@@ -132,8 +127,10 @@ class As3ToHaxe
         //Sys.exit(1);
     }
 
-    private function processFileContents(s:String):String
+    private function processFileContents(s:String, file:String):String
     {
+        var b = 0;
+
         /* -----------------------------------------------------------*/
         // space to tabs      
         s = quickRegR(s, "    ", "\t");
@@ -413,7 +410,6 @@ class As3ToHaxe
         
         // remap for in -> in
         s = quickRegR(s, "for\\(var[ ]+([a-zA-Z0-9_]+):[a-zA-Z0-9_]+[ ]+in[ ]+([a-zA-Z0-9_]+)[ ]*", "for($1 in $2");
-        return s;
 
         /* -----------------------------------------------------------*/
         
