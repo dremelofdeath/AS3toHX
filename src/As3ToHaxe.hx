@@ -44,11 +44,12 @@ using As3ToHaxe;
  */
 class As3ToHaxe
 {
-    public static var keys = ["-from", "-to", "-remove", "-useSpaces"];
+    public static var keys = ["-from", "-to", "-remove", "-useSpaces", "-flixelSpecific"];
     
     var to:String;
     var from:String; 
     var useSpaces:String;
+    var flixelSpecific:String;
     var remove:String;
     var sysargs:Array<String>;
     
@@ -174,9 +175,10 @@ class As3ToHaxe
         /* -----------------------------------------------------------*/
         
         // casting
-        s = quickRegR(s, "\\(([a-zA-Z0-9_]*) is ([a-zA-Z0-9_]*)", "(Std.is($1, $2)");
+        s = quickRegR(s, "([a-zA-Z0-9_]*) is ([a-zA-Z0-9_]*)", "Std.is($1, $2)");
         s = quickRegR(s, "=([a-zA-Z0-9_]*) as ([a-zA-Z0-9_]*)", "=cast($1, $2)");
         s = quickRegR(s, "=([a-zA-Z0-9_]*(\\(.*\\)))as ([a-zA-Z0-9_]*)", "=cast($1, $3)");
+        s = quickRegR(s, "\\(([a-zA-Z0-9_]+) as ([a-zA-Z0-9_]+)\\)", "cast($1, $2)");
         
         s = quickRegR(s, " int\\(([a-zA-Z0-9_]*)", " Std.int($1");
         s = quickRegR(s, " Number\\(([a-zA-Z0-9_]*)", " Std.parseFloat($1");
@@ -395,7 +397,7 @@ class As3ToHaxe
         /* -----------------------------------------------------------*/
         
         // remap for in -> in
-        s = quickRegR(s, "for\\(var([ ]*)([a-zA-Z0-9_]*):([a-zA-Z0-9_]*)([ ]*)in([ ]*)([a-zA-Z0-9_]*)([ ]*)", "for($2 in $6");
+        s = quickRegR(s, "for\\(var[ ]+([a-zA-Z0-9_]+):[a-zA-Z0-9_]+[ ]+in[ ]+([a-zA-Z0-9_]+)[ ]*", "for($1 in $2");
         
         /* -----------------------------------------------------------*/
         
@@ -414,6 +416,17 @@ class As3ToHaxe
         // remap shortened nullary constructor calls
         s = quickRegR(s, "new ([a-zA-Z0-9_]+[a-zA-Z0-9_<>]*)([^a-zA-Z0-9_(])", "new $1()$2", "gm");
                 
+        /* -----------------------------------------------------------*/
+
+        // Flixel-specific things
+
+        if (flixelSpecific == "true") {
+          if (new EReg("FlxPoint", "g").match(s)) {
+            s = quickRegR(s, "(import org\\.flixel\\.)\\*;", "$1*;\n$1util.*;");
+            s = quickRegR(s, "^(import org\\.flixel\\.)(FlxPoint);", "$1util.$2;", "gm");
+          }
+        }
+
         /* -----------------------------------------------------------*/
                 
         // use spaces instead of tab
@@ -489,6 +502,8 @@ class As3ToHaxe
         // Check to see if argument is missing
         if (to == null) { Lib.println("Missing argument '-to'"); return false; }
         if (from == null) { Lib.println("Missing argument '-from'"); return false; }
+
+        if (flixelSpecific == null) { flixelSpecific = "true"; }
         
         return true;
     }
