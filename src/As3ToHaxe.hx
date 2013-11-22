@@ -178,7 +178,17 @@ class As3ToHaxe
         /* -----------------------------------------------------------*/
         
         // remap public interface -> interface
-        s = quickRegR(s, "public interface", "interface");   
+        s = quickRegR(s, "public interface", "interface");
+
+        /* -----------------------------------------------------------*/
+
+        // fix multiple interface implementations/extends
+        //s = quickRegR(s, "extends[ ]+([a-zA-Z0-9_]+)[ ]+implements[ ]+([a-zA-Z0-9_]+),", "extends $1, implements $2,");
+        var interfacePattern:String = "implements[\r\n\t ]+([a-zA-Z0-9_]+),[\r\n\t ]+([A-Z][a-zA-Z0-9_]+)";
+        var interfaceRegex:EReg = new EReg(interfacePattern, "g");
+        while (interfaceRegex.match(s)) {
+          s = quickRegR(s, interfaceRegex, "implements $1 implements $2");
+        }
 
         /* -----------------------------------------------------------*/
         // remap constructor <name> -> function new
@@ -188,9 +198,13 @@ class As3ToHaxe
         
         // casting
         s = quickRegR(s, "([a-zA-Z0-9_]*) is ([a-zA-Z0-9_]*)", "Std.is($1, $2)");
+        s = quickRegR(s, "\\/\\/(.*)Std\\.is\\(([a-zA-Z0-9_]+), ([a-zA-Z0-9_]+)\\)", "//$1$2 is $3", "gm");
         s = quickRegR(s, "=([a-zA-Z0-9_]*) as ([a-zA-Z0-9_]*)", "=cast($1, $2)");
         s = quickRegR(s, "=([a-zA-Z0-9_]*(\\(.*\\)))as ([a-zA-Z0-9_]*)", "=cast($1, $3)");
         s = quickRegR(s, "\\(([a-zA-Z0-9_]+) as ([a-zA-Z0-9_]+)\\)", "cast($1, $2)");
+        //s = quickRegR(s, "([a-zA-Z0-9_]|\\.|\\(|\\))+ as ([a-zA-Z0-9_]|\\.|\\(|\\))+", "cast($1, $2)");
+        s = quickRegR(s, "\\([\r\n\t ]*([^\r\n\t ]+) as ([^\r\n\t]+)\\)", "cast($1, $2)");
+        s = quickRegR(s, "([a-zA-Z0-9._()[\\]\\-+*/]+) as ([a-zA-Z0-9._()[\\]\\-+*/]+)", "cast($1, $2)");
         
         s = quickRegR(s, " int\\(([a-zA-Z0-9_]*)", " Std.int($1");
         s = quickRegR(s, " Number\\(([a-zA-Z0-9_]*)", " Std.parseFloat($1");
@@ -215,8 +229,9 @@ class As3ToHaxe
         s = quickRegR(s, ":uint", ":Int"); // NME compatibility
         s = quickRegR(s, ":int", ":Int");
         s = quickRegR(s, ":Number", ":Float");
-        s = quickRegR(s, ":\\*", ":Dynamic"); 
-        s = quickRegR(s, ":Object", ":Dynamic"); 
+        s = quickRegR(s, ":\\*", ":Dynamic");
+        s = quickRegR(s, ":Object", ":Dynamic");
+        s = quickRegR(s, ":Function", ":Dynamic");
         s = quickRegR(s, ":Error", ":Dynamic"); // NME compatibility 
         
         s = quickRegR(s, " void", " Void");
@@ -224,7 +239,8 @@ class As3ToHaxe
         s = quickRegR(s, " uint", " Int"); // NME compatibility
         s = quickRegR(s, " int", " Int");
         s = quickRegR(s, " Number", " Float");
-        s = quickRegR(s, " Object", " Dynamic"); 
+        s = quickRegR(s, " Object", " Dynamic");
+        s = quickRegR(s, " Function", " Dynamic");
         s = quickRegR(s, " Error", " Dynamic"); // NME compatibility
         
         s = quickRegR(s, "<Boolean>", "<Bool>");
@@ -233,6 +249,7 @@ class As3ToHaxe
         s = quickRegR(s, "<Number>", "<Float>");
         s = quickRegR(s, "<\\*>", "<Dynamic>");
         s = quickRegR(s, "<Object>", "<Dynamic>");
+        s = quickRegR(s, "<Function>", "<Dynamic>");
         s = quickRegR(s, "<Error>", "<Dynamic>"); // NME compatibility
         
         /* -----------------------------------------------------------*/
@@ -242,34 +259,34 @@ class As3ToHaxe
         s = quickRegR(s, "new Vector([ ]*)([ ]*)<([ ]*)([^>]*)([ ]*)>([ ]*)\\(([ ]*)\\)([ ]*)", "new Array()");
         
         // old version:
-        /*              
+        /*
         s = quickRegR(s, "Vector([ ]*)\\.([ ]*)<([ ]*)([^>]*)([ ]*)>", "Vector<$3$4$5>");
         // new (including removing stupid spaces)
-        s = quickRegR(s, "new Vector([ ]*)([ ]*)<([ ]*)([^>]*)([ ]*)>([ ]*)\\(([ ]*)\\)([ ]*)", "new Vector()");  
+        s = quickRegR(s, "new Vector([ ]*)([ ]*)<([ ]*)([^>]*)([ ]*)>([ ]*)\\(([ ]*)\\)([ ]*)", "new Vector()");
         // and import if we have to
         var hasVectors = (quickRegM(s, "Vector([ ]*)\\.([ ]*)<([ ]*)([^>]*)([ ]*)>").length != 0);
         if (hasVectors) {
             s = quickRegR(s, "class([ ]*)(" + className + ")", "import flash.Vector;\n\nclass$1$2");
-        } 
+        }
         */
-                
+
         /* -----------------------------------------------------------*/
-        
+
         // array
-        s = quickRegR(s, "Array([ ]*);", "Array<Dynamic>;"); 
-        s = quickRegR(s, "Array([ ]*)=", "Array<Dynamic>=");
+        s = quickRegR(s, "([^a-zA-Z0-9_])Array([ ]*)([;={),])", "$1Array<Dynamic>$3");
+        s = quickRegR(s, "([^a-zA-Z0-9_])Array[ ]*$", "$1Array<Dynamic>", "gm");
+
+        // class
+        s = quickRegR(s, "([^a-zA-Z0-9_])Class([ ]*)([;={),])", "$1Class<Dynamic>$3");
+        s = quickRegR(s, "([^a-zA-Z0-9_])Class[ ]*$", "$1Class<Dynamic>", "gm");
                 
         /* -----------------------------------------------------------*/
         
         // remap protected -> private & internal -> private
-        s = quickRegR(s, "protected[ \t]var", "private var");
-        s = quickRegR(s, "internal[ \t]var", "private var");
-        s = quickRegR(s, "protected[ \t]const", "private const");
-        s = quickRegR(s, "internal[ \t]const", "private const");
-        s = quickRegR(s, "protected[ \t]function", "private function");
-        s = quickRegR(s, "internal[ \t]function", "private function");
-        s = quickRegR(s, "protected[ \t]override[ \t]function", "private override function");
-        s = quickRegR(s, "internal[ \t]override[ \t]function", "private override function");
+        s = quickRegR(s, "(protected|internal)[ \t]var", "private var");
+        s = quickRegR(s, "(protected|internal)[ \t]const", "private const");
+        s = quickRegR(s, "(final[ \t])?(private|protected|internal)[ \t](final[ \t])?function", "private function");
+        s = quickRegR(s, "(final[ \t])?(private|protected|internal)[ \t](final[ \t])?override[ \t](final[ \t])?function", "private override function");
         
         /* -----------------------------------------------------------*/
         
@@ -408,8 +425,10 @@ class As3ToHaxe
         
         /* -----------------------------------------------------------*/
         
-        // remap for in -> in
-        s = quickRegR(s, "for\\(var[ ]+([a-zA-Z0-9_]+):[a-zA-Z0-9_]+[ ]+in[ ]+([a-zA-Z0-9_]+)[ ]*", "for($1 in $2");
+        // remap for in -> in + Reflect
+        s = quickRegR(s, "for[ ]*\\(var[ ]+([a-zA-Z0-9_]+):[a-zA-Z0-9_]+[ ]+in[ ]+([^\r\n\t]*)\\)", "for($1 in Reflect.fields($2))");
+        // remap for each in -> in
+        s = quickRegR(s, "for[ ]+each\\(var[ ]+([a-zA-Z0-9_]+):[a-zA-Z0-9_]+[ ]+in[ ]+", "for($1 in ");
 
         /* -----------------------------------------------------------*/
         
@@ -425,6 +444,9 @@ class As3ToHaxe
 
         /* -----------------------------------------------------------*/
 
+        // change flash instantiations from Class objects to Type.createInstance()
+        s = quickRegR(s, "new ([a-z][a-zA-Z0-9_]*)([^a-zA-Z0-9_(])", "Type.createInstance($1, [])$2");
+        s = quickRegR(s, "new ([a-z][a-zA-Z0-9_]*)\\((.*)\\)", "Type.createInstance($1, [$2])");
         // remap shortened nullary constructor calls
         s = quickRegR(s, "new ([a-zA-Z0-9_]+[a-zA-Z0-9_<>]*)([^a-zA-Z0-9_(])", "new $1()$2", "gm");
                 
@@ -461,9 +483,15 @@ class As3ToHaxe
         trace(nameSpaces);
     }
     
-    public static function quickRegR(str:String, reg:String, rep:String, ?regOpt:String = "g"):String
+    public static function quickRegR(str:String, reg:Dynamic, rep:String, ?regOpt:String = "g"):String
     {
-        return new EReg(reg, regOpt).replace(str, rep);
+      var regex:EReg;
+      if (Std.is(reg, String)) {
+        regex = new EReg(cast(reg, String), regOpt);
+      } else {
+        regex = reg;
+      }
+      return regex.replace(str, rep);
     }
     
     public static function quickRegM(str:String, reg:String, ?numMatches:Int = 1, ?regOpt:String = "g"):Array<String>
