@@ -197,11 +197,11 @@ class As3ToHaxe
         /* -----------------------------------------------------------*/
         
         // casting
-        s = quickRegR(s, "([a-zA-Z0-9_]*) is ([a-zA-Z0-9_]*)", "Std.is($1, $2)");
+        s = quickRegR(s, "([a-zA-Z0-9_.\\[\\]]*) is ([a-zA-Z0-9_.\\[\\]]*)", "Std.is($1, $2)");
         s = quickRegR(s, "\\/\\/(.*)Std\\.is\\(([a-zA-Z0-9_]+), ([a-zA-Z0-9_]+)\\)", "//$1$2 is $3", "gm");
         s = quickRegR(s, "=([a-zA-Z0-9_]*) as ([a-zA-Z0-9_]*)", "=cast($1, $2)");
         s = quickRegR(s, "=([a-zA-Z0-9_.]*(\\(.*\\)))as ([a-zA-Z0-9_]*)", "=cast($1, $3)");
-        s = quickRegR(s, "\\(([a-zA-Z0-9_]+) as ([a-zA-Z0-9_]+)\\)", "cast($1, $2)");
+        s = quickRegR(s, "\\(([a-zA-Z0-9_.]+) as ([a-zA-Z0-9_.]+)\\)", "cast($1, $2)");
         //s = quickRegR(s, "([a-zA-Z0-9_]|\\.|\\(|\\))+ as ([a-zA-Z0-9_]|\\.|\\(|\\))+", "cast($1, $2)");
         s = quickRegR(s, "\\([\r\n\t ]*([^\r\n\t ]+) as ([^\r\n\t]+)\\)", "cast($1, $2)");
         s = quickRegR(s, "([a-zA-Z0-9._()[\\]\\-+*/]+) as ([a-zA-Z0-9._()[\\]\\-+*/]+)", "cast($1, $2)");
@@ -281,7 +281,8 @@ class As3ToHaxe
         s = quickRegR(s, "([^a-zA-Z0-9_])Class[ ]*$", "$1Class<Dynamic>", "gm");
 
         // varargs -> Array<Dynamic>
-        s = quickRegR(s, "(function [a-zA-Z0-9_]+\\(.*)(\\.\\.\\.[ ]*)([a-zA-Z0-9_]+)(.*\\{)", "$1$3:Array<Dynamic>$4", "gms");
+        s = quickRegR(s, "(function [a-zA-Z0-9_]+\\(.*)(\\.\\.\\.[ ]*)([a-zA-Z0-9_]+)(.*\\))", "$1$3:Array<Dynamic>$4", "gms");
+        s = quickRegR(s, "(function [a-zA-Z0-9_]+\\(.*)(\\.\\.\\.[ ]*)([a-zA-Z0-9_]+)(.*\\))", "$1$3:Array<Dynamic>$4");
 
         /* -----------------------------------------------------------*/
         
