@@ -200,7 +200,7 @@ class As3ToHaxe
         s = quickRegR(s, "([a-zA-Z0-9_]*) is ([a-zA-Z0-9_]*)", "Std.is($1, $2)");
         s = quickRegR(s, "\\/\\/(.*)Std\\.is\\(([a-zA-Z0-9_]+), ([a-zA-Z0-9_]+)\\)", "//$1$2 is $3", "gm");
         s = quickRegR(s, "=([a-zA-Z0-9_]*) as ([a-zA-Z0-9_]*)", "=cast($1, $2)");
-        s = quickRegR(s, "=([a-zA-Z0-9_]*(\\(.*\\)))as ([a-zA-Z0-9_]*)", "=cast($1, $3)");
+        s = quickRegR(s, "=([a-zA-Z0-9_.]*(\\(.*\\)))as ([a-zA-Z0-9_]*)", "=cast($1, $3)");
         s = quickRegR(s, "\\(([a-zA-Z0-9_]+) as ([a-zA-Z0-9_]+)\\)", "cast($1, $2)");
         //s = quickRegR(s, "([a-zA-Z0-9_]|\\.|\\(|\\))+ as ([a-zA-Z0-9_]|\\.|\\(|\\))+", "cast($1, $2)");
         s = quickRegR(s, "\\([\r\n\t ]*([^\r\n\t ]+) as ([^\r\n\t]+)\\)", "cast($1, $2)");
@@ -279,7 +279,10 @@ class As3ToHaxe
         // class
         s = quickRegR(s, "([^a-zA-Z0-9_])Class([ ]*)([;={),])", "$1Class<Dynamic>$3");
         s = quickRegR(s, "([^a-zA-Z0-9_])Class[ ]*$", "$1Class<Dynamic>", "gm");
-                
+
+        // varargs -> Array<Dynamic>
+        s = quickRegR(s, "(function [a-zA-Z0-9_]+\\(.*)(\\.\\.\\.[ ]*)([a-zA-Z0-9_]+)(.*\\{)", "$1$3:Array<Dynamic>$4", "gms");
+
         /* -----------------------------------------------------------*/
         
         // remap protected -> private & internal -> private
@@ -449,17 +452,98 @@ class As3ToHaxe
         s = quickRegR(s, "new ([a-z][a-zA-Z0-9_]*)\\((.*)\\)", "Type.createInstance($1, [$2])");
         // remap shortened nullary constructor calls
         s = quickRegR(s, "new ([a-zA-Z0-9_]+[a-zA-Z0-9_<>]*)([^a-zA-Z0-9_(])", "new $1()$2", "gm");
+
+        /* -----------------------------------------------------------*/
+
+        // remove invalid imports
+        s = quickRegR(s, "^import flash\\.[a-z]+\\.[a-z][a-zA-Z0-9_]*;\r?\n", "", "gm");
                 
         /* -----------------------------------------------------------*/
 
         // Flixel-specific things
 
-        if (flixelSpecific == "true") {
+        // for version 3.0.0...
+        /*if (flixelSpecific == "true") {
           if (new EReg("FlxPoint", "g").match(s)) {
             s = quickRegR(s, "(import org\\.flixel\\.)\\*;", "$1*;\n$1util.*;");
             s = quickRegR(s, "^(import org\\.flixel\\.)(FlxPoint);", "$1util.$2;", "gm");
           }
+        }*/
+        var hasImportedGroup:Bool = false;
+        var actuallyImportedGroup:Bool = false;
+        var hasImportedText:Bool = false;
+        var actuallyImportedText:Bool = false;
+        var hasImportedTile:Bool = false;
+        var actuallyImportedTile:Bool = false;
+        var hasImportedUtil:Bool = false;
+        var actuallyImportedUtil:Bool = false;
+        // TODO(dremelofdeath): This could probably be another function, huh?
+        // TODO(dremelofdeath): It's a nit, but imports could be in alphabetic order...
+        if (flixelSpecific == "true") {
+          s = quickRegR(s, "(import )(org\\.)(flixel\\.)", "$1$3");
+          if (new EReg("FlxGroup", "g").match(s)) {
+            if (!hasImportedGroup) {
+              hasImportedGroup = true;
+              s = quickRegR(s, "(import flixel\\.)\\*;", "$1*;\n$1group.*;");
+              actuallyImportedGroup = new EReg("import flixel\\.group\\.\\*;", "g").match(s);
+            }
+            if (actuallyImportedTile) {
+              // then just delete the whole line if it's there
+              s = quickRegR(s, "^import flixel\\.FlxGroup;\r?\n", "", "gm");
+            } else {
+              s = quickRegR(s, "^(import flixel\\.)(FlxGroup);", "$1group.$2;", "gm");
+            }
+          }
+          if (new EReg("FlxPoint", "g").match(s)) {
+            if (!hasImportedUtil) {
+              hasImportedUtil = true;
+              s = quickRegR(s, "(import flixel\\.)\\*;", "$1*;\n$1util.*;");
+              actuallyImportedUtil = new EReg("import flixel\\.util\\.\\*;", "g").match(s);
+            }
+            if (actuallyImportedUtil) {
+              s = quickRegR(s, "^import flixel\\.FlxPoint;\r?\n", "", "gm");
+            } else {
+              s = quickRegR(s, "^(import flixel\\.)(FlxPoint);", "$1util.$2;", "gm");
+            }
+          }
+          if (new EReg("FlxText", "g").match(s)) {
+            if (!hasImportedText) {
+              hasImportedText = true;
+              s = quickRegR(s, "(import flixel\\.)\\*;", "$1*;\n$1text.*;");
+              actuallyImportedText = new EReg("import flixel\\.text\\.\\*;", "g").match(s);
+            }
+            if (actuallyImportedText) {
+              s = quickRegR(s, "^import flixel\\.FlxText;\r?\n", "", "gm");
+            } else {
+              s = quickRegR(s, "^(import flixel\\.)(FlxText);", "$1text.$2;", "gm");
+            }
+          }
+          if (new EReg("FlxTilemap", "g").match(s)) {
+            if (!hasImportedTile) {
+              hasImportedTile = true;
+              s = quickRegR(s, "(import flixel\\.)\\*;", "$1*;\n$1tile.*;");
+              actuallyImportedTile = new EReg("import flixel\\.tile\\.\\*;", "g").match(s);
+            }
+            if (actuallyImportedTile) {
+              s = quickRegR(s, "^import flixel\\.FlxTilemap;\r?\n", "", "gm");
+            } else {
+              s = quickRegR(s, "^(import flixel\\.)(FlxTilemap);", "$1tile.$2;", "gm");
+            }
+          }
+          if (new EReg("FlxTile", "g").match(s)) {
+            if (!hasImportedTile) {
+              hasImportedTile = true;
+              s = quickRegR(s, "(import flixel\\.)\\*;", "$1*;\n$1tile.*;");
+              actuallyImportedTile = new EReg("import flixel\\.tile\\.\\*;", "g").match(s);
+            }
+            if (actuallyImportedTile) {
+              s = quickRegR(s, "^import flixel\\.system\\.FlxTile;\r?\n", "", "gm");
+            } else {
+              s = quickRegR(s, "^(import flixel\\.)(system\\.)(FlxTile);", "$1tile.$3;", "gm");
+            }
+          }
         }
+
 
         /* -----------------------------------------------------------*/
                 
