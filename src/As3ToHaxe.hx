@@ -284,6 +284,9 @@ class As3ToHaxe
         s = quickRegR(s, "(function [a-zA-Z0-9_]+\\(.*)(\\.\\.\\.[ ]*)([a-zA-Z0-9_]+)(.*\\))", "$1$3:Array<Dynamic>$4", "gms");
         s = quickRegR(s, "(function [a-zA-Z0-9_]+\\(.*)(\\.\\.\\.[ ]*)([a-zA-Z0-9_]+)(.*\\))", "$1$3:Array<Dynamic>$4");
 
+        // take type parameterization back for type comparisons
+        s = quickRegR(s, "(Std\\.is\\([a-zA-Z0-9._\\[\\]]+, )([A-Z][a-zA-Z0-9_]*)(<[a-zA-Z0-9_<>]+>)\\)", "$1$2)");
+
         /* -----------------------------------------------------------*/
         
         // remap protected -> private & internal -> private
@@ -463,13 +466,6 @@ class As3ToHaxe
 
         // Flixel-specific things
 
-        // for version 3.0.0...
-        /*if (flixelSpecific == "true") {
-          if (new EReg("FlxPoint", "g").match(s)) {
-            s = quickRegR(s, "(import org\\.flixel\\.)\\*;", "$1*;\n$1util.*;");
-            s = quickRegR(s, "^(import org\\.flixel\\.)(FlxPoint);", "$1util.$2;", "gm");
-          }
-        }*/
         var hasImportedGroup:Bool = false;
         var actuallyImportedGroup:Bool = false;
         var hasImportedText:Bool = false;
@@ -543,6 +539,59 @@ class As3ToHaxe
               s = quickRegR(s, "^(import flixel\\.)(system\\.)(FlxTile);", "$1tile.$3;", "gm");
             }
           }
+
+          // Convert to using frontends in HaxeFlixel
+          s = quickRegR(s, "FlxG\\.addBitmap\\(", "FlxG.bitmap.add(");
+          s = quickRegR(s, "FlxG\\.checkBitmapCache\\(", "FlxG.bitmap.checkCache(");
+          s = quickRegR(s, "FlxG\\.clearBitmapCache\\(", "FlxG.bitmap.clearCache(");
+          s = quickRegR(s, "FlxG\\.createBitmap\\(", "FlxG.bitmap.create(");
+
+          s = quickRegR(s, "FlxG\\.bgColor", "FlxG.cameras.bgColor");
+          s = quickRegR(s, "FlxG\\.cameras", "FlxG.cameras.list");
+          s = quickRegR(s, "FlxG\\.useBufferLocking", "FlxG.cameras.useBufferLocking");
+          s = quickRegR(s, "FlxG\\.addCamera\\(", "FlxG.cameras.add(");
+          s = quickRegR(s, "FlxG\\.fade\\(", "FlxG.cameras.fade(");
+          s = quickRegR(s, "FlxG\\.flash\\(", "FlxG.cameras.flash(");
+          s = quickRegR(s, "FlxG\\.lockCameras\\(", "FlxG.cameras.lock(");
+          s = quickRegR(s, "FlxG\\.removeCamera\\(", "FlxG.cameras.remove(");
+          s = quickRegR(s, "FlxG\\.resetCameras\\(", "FlxG.cameras.reset(");
+          s = quickRegR(s, "FlxG\\.shake\\(", "FlxG.cameras.shake(");
+          s = quickRegR(s, "FlxG\\.unlockCameras\\(", "FlxG.cameras.unlock(");
+          s = quickRegR(s, "FlxG\\.updateCameras\\(", "FlxG.cameras.update(");
+
+          s = quickRegR(s, "FlxG\\.visualDebug", "FlxG.debugger.visualDebug");
+          s = quickRegR(s, "FlxG\\.resetDebuggerLayout\\(", "FlxG.debugger.resetLayout(");
+          s = quickRegR(s, "FlxG\\.setDebuggerLayout\\(", "FlxG.debugger.setLayout(");
+
+          s = quickRegR(s, "FlxG\\.resetInput\\(", "FlxG.inputs.reset(");
+          s = quickRegR(s, "FlxG\\.updateInput\\(", "FlxG.inputs.update(");
+
+          s = quickRegR(s, "FlxG\\.log\\(", "FlxG.log.add(");
+
+          s = quickRegR(s, "FlxG\\.plugins", "FlxG.plugins.list");
+          s = quickRegR(s, "FlxG\\.addPlugin\\(", "FlxG.plugins.add(");
+          s = quickRegR(s, "FlxG\\.drawPlugins\\(", "FlxG.plugins.draw(");
+          s = quickRegR(s, "FlxG\\.getPlugin\\(", "FlxG.plugins.get(");
+          s = quickRegR(s, "FlxG\\.removePlugin\\(", "FlxG.plugins.remove(");
+          s = quickRegR(s, "FlxG\\.removePluginType\\(", "FlxG.plugins.removeType(");
+          s = quickRegR(s, "FlxG\\.updatePlugins\\(", "FlxG.plugins.update(");
+
+          s = quickRegR(s, "FlxG\\.sounds", "FlxG.sounds.list");
+          s = quickRegR(s, "FlxG\\.music", "FlxG.sounds.music");
+          s = quickRegR(s, "FlxG\\.mute", "FlxG.sounds.muted");
+          s = quickRegR(s, "FlxG\\.volumeHandler", "FlxG.sounds.volumeHandler");
+          s = quickRegR(s, "FlxG\\.volume", "FlxG.sounds.volume");
+          s = quickRegR(s, "FlxG\\.destroySounds\\(", "FlxG.sounds.destroySounds(");
+          s = quickRegR(s, "FlxG\\.loadSound\\(", "FlxG.sounds.load(");
+          s = quickRegR(s, "FlxG\\.pauseSounds\\(", "FlxG.sounds.pauseSounds(");
+          s = quickRegR(s, "FlxG\\.play\\(", "FlxG.sounds.play(");
+          s = quickRegR(s, "FlxG\\.playMusic\\(", "FlxG.sounds.playMusic(");
+          s = quickRegR(s, "FlxG\\.resumeSounds\\(", "FlxG.sounds.resumeSounds(");
+          s = quickRegR(s, "FlxG\\.stream\\(", "FlxG.sounds.stream(");
+          s = quickRegR(s, "FlxG\\.updateSounds\\(", "FlxG.sounds.updateSounds(");
+
+          s = quickRegR(s, "FlxG\\.watch\\(", "FlxG.watch.add(");
+          s = quickRegR(s, "FlxG\\.unwatch\\(", "FlxG.watch.remove(");
         }
 
 
