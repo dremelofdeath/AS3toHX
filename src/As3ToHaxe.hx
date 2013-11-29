@@ -3,6 +3,7 @@
  * Original author : Tarwin Stroh-Spijer <tarwin@touchmypixel.com>
  * Contributors: Tony Polinelli <tonyp@touchmypixel.com>       
  *               Andras Csizmadia <andras@vpmedia.eu>
+ *               Zachary Murray <dremelofdeath@gmail.com>
  * Reference for further improvements: 
  * http://haxe.org/doc/start/flash/as3migration/part1 
  * http://www.haxenme.org/developers/documentation/actionscript-developers/
