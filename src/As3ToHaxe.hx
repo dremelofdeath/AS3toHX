@@ -541,56 +541,133 @@ class As3ToHaxe
             }
           }
 
+          // Generic FlxG constants, etc., that moved to separate classes or were renamed
+          s = quickRegR(s, "FlxG\\.getLibraryName\\(\\)", "FlxG.libraryName");
+
+          // FlxAngle
+          s = quickRegR(s, "FlxG\\.DEG", "FlxAngle.TO_DEG");
+          s = quickRegR(s, "FlxG\\.RAD", "FlxAngle.TO_RAD");
+
+          // FlxArrayUtil
+          s = quickRegR(s, "FlxG\\.getRandom\\(", "FlxArrayUtil.getRandom(");
+          s = quickRegR(s, "FlxG\\.shuffle\\(", "FlxArrayUtil.shuffle(");
+
+          // FlxColor
+          s = quickRegR(s, "FlxG\\.BLACK", "FlxColor.BLACK");
+          s = quickRegR(s, "FlxG\\.BLUE", "FlxColor.BLUE");
+          s = quickRegR(s, "FlxG\\.GREEN", "FlxColor.GREEN");
+          s = quickRegR(s, "FlxG\\.PINK", "FlxColor.PINK");
+          s = quickRegR(s, "FlxG\\.RED", "FlxColor.RED");
+          s = quickRegR(s, "FlxG\\.TRANSPARENT", "FlxColor.TRANSPARENT");
+          s = quickRegR(s, "FlxG\\.WHITE", "FlxColor.WHITE");
+
+          // FlxDebugger
+          s = quickRegR(s, "FlxG\\.DEBUGGER_BIG", "FlxDebugger.BIG");
+          s = quickRegR(s, "FlxG\\.DEBUGGER_LEFT", "FlxDebugger.LEFT");
+          s = quickRegR(s, "FlxG\\.DEBUGGER_MICRO", "FlxDebugger.MICRO");
+          s = quickRegR(s, "FlxG\\.DEBUGGER_RIGHT", "FlxDebugger.RIGHT");
+          s = quickRegR(s, "FlxG\\.DEBUGGER_STANDARD", "FlxDebugger.STANDARD");
+          s = quickRegR(s, "FlxG\\.DEBUGGER_TOP", "FlxDebugger.TOP");
+
+          // FlxRandom
+          s = quickRegR(s, "FlxG\\.random\\(", "FlxRandom.float(");
+          s = quickRegR(s, "FlxG\\.globalSeed", "FlxRandom.globalSeed");
+
+          // FlxSpriteUtil
+          s = quickRegR(s, "FlxG\\.flashGfx", "FlxSpriteUtil.flashGfx");
+          s = quickRegR(s, "FlxG\\.flashGfxSprite", "FlxSpriteUtil.flashGfxSprite");
+
+          // FlxTween
+          s = quickRegR(s, "FlxG\\.tween\\(", "FlxTween.multiVar(");
+
+          // Reg
+          s = quickRegR(s, "FlxG\\.levels", "Reg.levels");
+          s = quickRegR(s, "FlxG\\.save", "Reg.save");
+          s = quickRegR(s, "FlxG\\.saves", "Reg.saves");
+          s = quickRegR(s, "FlxG\\.score", "Reg.score");
+          s = quickRegR(s, "FlxG\\.scores", "Reg.scores");
+
           // Convert to using frontends in HaxeFlixel
+
+          // Bitmap frontend
           s = quickRegR(s, "FlxG\\.addBitmap\\(", "FlxG.bitmap.add(");
           s = quickRegR(s, "FlxG\\.checkBitmapCache\\(", "FlxG.bitmap.checkCache(");
+          s = quickRegR(s, "FlxG\\.clearAssetsCache\\(", "FlxG.bitmap.clearAssetsCache(");
           s = quickRegR(s, "FlxG\\.clearBitmapCache\\(", "FlxG.bitmap.clearCache(");
           s = quickRegR(s, "FlxG\\.createBitmap\\(", "FlxG.bitmap.create(");
+          s = quickRegR(s, "FlxG\\.getCacheKeyFor\\(", "FlxG.bitmap.getCacheKeyFor(");
+          s = quickRegR(s, "FlxG\\.getUniqueBitmapKey\\(", "FlxG.bitmap.getUniqueKey(");
+          s = quickRegR(s, "FlxG\\.removeBitmap\\(", "FlxG.bitmap.remove(");
 
+          // Camera frontend
+          s = quickRegR(s, "FlxG\\.addCamera\\(", "FlxG.cameras.add(");
           s = quickRegR(s, "FlxG\\.bgColor", "FlxG.cameras.bgColor");
           s = quickRegR(s, "FlxG\\.cameras", "FlxG.cameras.list");
-          s = quickRegR(s, "FlxG\\.useBufferLocking", "FlxG.cameras.useBufferLocking");
-          s = quickRegR(s, "FlxG\\.addCamera\\(", "FlxG.cameras.add(");
           s = quickRegR(s, "FlxG\\.fade\\(", "FlxG.cameras.fade(");
           s = quickRegR(s, "FlxG\\.flash\\(", "FlxG.cameras.flash(");
           s = quickRegR(s, "FlxG\\.lockCameras\\(", "FlxG.cameras.lock(");
           s = quickRegR(s, "FlxG\\.removeCamera\\(", "FlxG.cameras.remove(");
+          s = quickRegR(s, "FlxG\\.renderCameras\\(", "FlxG.cameras.render(");
           s = quickRegR(s, "FlxG\\.resetCameras\\(", "FlxG.cameras.reset(");
           s = quickRegR(s, "FlxG\\.shake\\(", "FlxG.cameras.shake(");
           s = quickRegR(s, "FlxG\\.unlockCameras\\(", "FlxG.cameras.unlock(");
           s = quickRegR(s, "FlxG\\.updateCameras\\(", "FlxG.cameras.update(");
+          s = quickRegR(s, "FlxG\\.useBufferLocking", "FlxG.cameras.useBufferLocking");
 
-          s = quickRegR(s, "FlxG\\.visualDebug", "FlxG.debugger.visualDebug");
+          // Debugger frontend
           s = quickRegR(s, "FlxG\\.resetDebuggerLayout\\(", "FlxG.debugger.resetLayout(");
           s = quickRegR(s, "FlxG\\.setDebuggerLayout\\(", "FlxG.debugger.setLayout(");
+          s = quickRegR(s, "FlxG\\.toggleKeys\\(", "FlxG.debugger.toggleKeys(");
+          s = quickRegR(s, "FlxG\\.visualDebug", "FlxG.debugger.visualDebug");
 
+          // Inputs frontend
           s = quickRegR(s, "FlxG\\.resetInput\\(", "FlxG.inputs.reset(");
           s = quickRegR(s, "FlxG\\.updateInput\\(", "FlxG.inputs.update(");
 
-          s = quickRegR(s, "FlxG\\.log\\(", "FlxG.log.add(");
+          // Log frontend
+          s = quickRegR(s, "FlxG\\.advancedLog\\(", "FlxG.log.advanced(");
+          s = quickRegR(s, "FlxG\\.clearLog\\(", "FlxG.log.clear(");
+          s = quickRegR(s, "FlxG\\.error\\(", "FlxG.log.error(");
+          s = quickRegR(s, "FlxG\\.log\\(", "FlxG.log.add(");  // Might use trace() here instead
+          s = quickRegR(s, "FlxG\\.notice\\(", "FlxG.log.notice(");
+          s = quickRegR(s, "FlxG\\.warn\\(", "FlxG.log.warn(");
 
-          s = quickRegR(s, "FlxG\\.plugins", "FlxG.plugins.list");
+          // Plugins frontend
           s = quickRegR(s, "FlxG\\.addPlugin\\(", "FlxG.plugins.add(");
           s = quickRegR(s, "FlxG\\.drawPlugins\\(", "FlxG.plugins.draw(");
           s = quickRegR(s, "FlxG\\.getPlugin\\(", "FlxG.plugins.get(");
+          s = quickRegR(s, "FlxG\\.plugins", "FlxG.plugins.list");
           s = quickRegR(s, "FlxG\\.removePlugin\\(", "FlxG.plugins.remove(");
           s = quickRegR(s, "FlxG\\.removePluginType\\(", "FlxG.plugins.removeType(");
           s = quickRegR(s, "FlxG\\.updatePlugins\\(", "FlxG.plugins.update(");
 
-          s = quickRegR(s, "FlxG\\.sounds", "FlxG.sounds.list");
+          // Sounds frontend
+          s = quickRegR(s, "FlxG\\.addSound\\(", "FlxG.sound.add(");
+          s = quickRegR(s, "FlxG\\.destroySounds\\(", "FlxG.sounds.destroySounds(");
+          s = quickRegR(s, "FlxG\\.keyMute", "FlxG.sound.keyMute");
+          s = quickRegR(s, "FlxG\\.keyVolumeDown", "FlxG.sound.keyVolumeDown");
+          s = quickRegR(s, "FlxG\\.keyVolumeUp", "FlxG.sound.keyVolumeUp");
+          s = quickRegR(s, "FlxG\\.loadSound\\(", "FlxG.sounds.load(");
           s = quickRegR(s, "FlxG\\.music", "FlxG.sounds.music");
           s = quickRegR(s, "FlxG\\.mute", "FlxG.sounds.muted");
-          s = quickRegR(s, "FlxG\\.volumeHandler", "FlxG.sounds.volumeHandler");
-          s = quickRegR(s, "FlxG\\.volume", "FlxG.sounds.volume");
-          s = quickRegR(s, "FlxG\\.destroySounds\\(", "FlxG.sounds.destroySounds(");
-          s = quickRegR(s, "FlxG\\.loadSound\\(", "FlxG.sounds.load(");
           s = quickRegR(s, "FlxG\\.pauseSounds\\(", "FlxG.sounds.pauseSounds(");
           s = quickRegR(s, "FlxG\\.play\\(", "FlxG.sounds.play(");
           s = quickRegR(s, "FlxG\\.playMusic\\(", "FlxG.sounds.playMusic(");
           s = quickRegR(s, "FlxG\\.resumeSounds\\(", "FlxG.sounds.resumeSounds(");
+          s = quickRegR(s, "FlxG\\.sounds", "FlxG.sounds.list");
           s = quickRegR(s, "FlxG\\.stream\\(", "FlxG.sounds.stream(");
           s = quickRegR(s, "FlxG\\.updateSounds\\(", "FlxG.sounds.updateSounds(");
+          s = quickRegR(s, "FlxG\\.volume", "FlxG.sounds.volume");
+          s = quickRegR(s, "FlxG\\.volumeHandler", "FlxG.sounds.volumeHandler");
 
+          // VCR frontend
+          s = quickRegR(s, "FlxG\\.loadReplay\\(", "FlxG.vcr.loadReplay(");
+          s = quickRegR(s, "FlxG\\.reloadReplay\\(", "FlxG.vcr.reloadReplay(");
+          s = quickRegR(s, "FlxG\\.recordReplay\\(", "FlxG.vcr.startRecording(");
+          s = quickRegR(s, "FlxG\\.stopRecording\\(", "FlxG.vcr.stopRecording(");
+          s = quickRegR(s, "FlxG\\.stopReplay\\(", "FlxG.vcr.stopReplay(");
+
+          // Watch frontend
           s = quickRegR(s, "FlxG\\.watch\\(", "FlxG.watch.add(");
           s = quickRegR(s, "FlxG\\.unwatch\\(", "FlxG.watch.remove(");
         }
