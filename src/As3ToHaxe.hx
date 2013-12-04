@@ -670,6 +670,21 @@ class As3ToHaxe
           // Watch frontend
           s = quickRegR(s, "FlxG\\.watch\\(", "FlxG.watch.add(");
           s = quickRegR(s, "FlxG\\.unwatch\\(", "FlxG.watch.remove(");
+
+          // Now convert classes that extend from the HaxeFlixel base objects
+          if (classExtends(s, "FlxSprite")) {
+            s = quickRegR(s, "((this\\.)?)_animations", "$1animation._animations");
+            s = quickRegR(s, "((this\\.)?)_curAnim", "$1animation.curAnim");
+            s = quickRegR(s, "((this\\.)?)addAnimation\\(", "$1animation.add(");
+            s = quickRegR(s, "addAnimationCallback\\((.*)\\)", "callback = $1");
+            s = quickRegR(s, "this\\.addAnimationCallback\\((.*)\\)", "this.callback = $1");
+            //s = quickRegR(s, "((this\\.)?)calcFrame\\(", "$1animation.calcFrame(");
+            s = quickRegR(s, "((this\\.)?)finished", "$1animation.finished");
+            s = quickRegR(s, "((this\\.)?)frame", "$1animation.frameIndex");
+            s = quickRegR(s, "((this\\.)?)play\\(", "$1animation.play(");
+            s = quickRegR(s, "((this\\.)?)randomFrame\\(", "$1animation.randomFrame(");
+            s = quickRegR(s, "((this\\.)?)updateAnimation\\(", "$1animation.update(");
+          }
         }
 
 
@@ -682,6 +697,11 @@ class As3ToHaxe
         }
 
         return s;
+    }
+
+    private function classExtends(s:String, parentClass:String):Bool
+    {
+      return new EReg("extends[ ]+" + parentClass, "g").match(s);
     }
     
     private function logLoopError(type:String, file:String)
