@@ -467,79 +467,17 @@ class As3ToHaxe
 
         // Flixel-specific things
 
-        var hasImportedGroup:Bool = false;
-        var actuallyImportedGroup:Bool = false;
-        var hasImportedText:Bool = false;
-        var actuallyImportedText:Bool = false;
-        var hasImportedTile:Bool = false;
-        var actuallyImportedTile:Bool = false;
-        var hasImportedUtil:Bool = false;
-        var actuallyImportedUtil:Bool = false;
-        // TODO(dremelofdeath): This could probably be another function, huh?
+        // My variable naming ability is awful. --zack
+        var gi:Map<String, Bool> = new Map<String, Bool>();  // Attempted global imports
+        var agi:Map<String, Bool> = new Map<String, Bool>();  // Actually imported global imports
         // TODO(dremelofdeath): It's a nit, but imports could be in alphabetic order...
         if (flixelSpecific == "true") {
           s = quickRegR(s, "(import )(org\\.)(flixel\\.)", "$1$3");
-          if (new EReg("FlxGroup", "g").match(s)) {
-            if (!hasImportedGroup) {
-              hasImportedGroup = true;
-              s = quickRegR(s, "(import flixel\\.)\\*;", "$1*;\n$1group.*;");
-              actuallyImportedGroup = new EReg("import flixel\\.group\\.\\*;", "g").match(s);
-            }
-            if (actuallyImportedTile) {
-              // then just delete the whole line if it's there
-              s = quickRegR(s, "^import flixel\\.FlxGroup;\r?\n", "", "gm");
-            } else {
-              s = quickRegR(s, "^(import flixel\\.)(FlxGroup);", "$1group.$2;", "gm");
-            }
-          }
-          if (new EReg("FlxPoint", "g").match(s)) {
-            if (!hasImportedUtil) {
-              hasImportedUtil = true;
-              s = quickRegR(s, "(import flixel\\.)\\*;", "$1*;\n$1util.*;");
-              actuallyImportedUtil = new EReg("import flixel\\.util\\.\\*;", "g").match(s);
-            }
-            if (actuallyImportedUtil) {
-              s = quickRegR(s, "^import flixel\\.FlxPoint;\r?\n", "", "gm");
-            } else {
-              s = quickRegR(s, "^(import flixel\\.)(FlxPoint);", "$1util.$2;", "gm");
-            }
-          }
-          if (new EReg("FlxText", "g").match(s)) {
-            if (!hasImportedText) {
-              hasImportedText = true;
-              s = quickRegR(s, "(import flixel\\.)\\*;", "$1*;\n$1text.*;");
-              actuallyImportedText = new EReg("import flixel\\.text\\.\\*;", "g").match(s);
-            }
-            if (actuallyImportedText) {
-              s = quickRegR(s, "^import flixel\\.FlxText;\r?\n", "", "gm");
-            } else {
-              s = quickRegR(s, "^(import flixel\\.)(FlxText);", "$1text.$2;", "gm");
-            }
-          }
-          if (new EReg("FlxTilemap", "g").match(s)) {
-            if (!hasImportedTile) {
-              hasImportedTile = true;
-              s = quickRegR(s, "(import flixel\\.)\\*;", "$1*;\n$1tile.*;");
-              actuallyImportedTile = new EReg("import flixel\\.tile\\.\\*;", "g").match(s);
-            }
-            if (actuallyImportedTile) {
-              s = quickRegR(s, "^import flixel\\.FlxTilemap;\r?\n", "", "gm");
-            } else {
-              s = quickRegR(s, "^(import flixel\\.)(FlxTilemap);", "$1tile.$2;", "gm");
-            }
-          }
-          if (new EReg("FlxTile", "g").match(s)) {
-            if (!hasImportedTile) {
-              hasImportedTile = true;
-              s = quickRegR(s, "(import flixel\\.)\\*;", "$1*;\n$1tile.*;");
-              actuallyImportedTile = new EReg("import flixel\\.tile\\.\\*;", "g").match(s);
-            }
-            if (actuallyImportedTile) {
-              s = quickRegR(s, "^import flixel\\.system\\.FlxTile;\r?\n", "", "gm");
-            } else {
-              s = quickRegR(s, "^(import flixel\\.)(system\\.)(FlxTile);", "$1tile.$3;", "gm");
-            }
-          }
+          s = convertImportForSingleClass(s, "flixel", "flixel.group", "FlxGroup", gi, agi);
+          s = convertImportForSingleClass(s, "flixel", "flixel.util", "FlxPoint", gi, agi);
+          s = convertImportForSingleClass(s, "flixel", "flixel.text", "FlxText", gi, agi);
+          s = convertImportForSingleClass(s, "flixel", "flixel.tile", "FlxTilemap", gi, agi);
+          s = convertImportForSingleClass(s, "flixel", "flixel.tile", "FlxTile", gi, agi);
 
           // Generic FlxG constants, etc., that moved to separate classes or were renamed
           s = quickRegR(s, "FlxG\\.getLibraryName\\(\\)", "FlxG.libraryName");
@@ -697,6 +635,34 @@ class As3ToHaxe
         }
 
         return s;
+    }
+
+    private function convertImportForSingleClass(
+        s:String, frompkg:String, topkg:String, className:String,
+        globalImports:Map<String, Bool>, completedGlobalImports:Map<String, Bool>):String {
+      // TODO(dremelofdeath): This is poorly designed, I think. Could be way better.
+      var frompkg_pattern:String = quickRegR(frompkg, "\\.", "\\\\.");
+      var topkg_pattern:String = quickRegR(topkg, "\\.", "\\\\.");
+      if (new EReg(className, "g").match(s)) {
+        if (!globalImports.get(topkg)) {
+          globalImports.set(topkg, true);
+          var before:String = "(import " + frompkg_pattern + "\\.)\\*;";
+          var after:String = "$1*;\nimport " + topkg + ".*;";
+          s = quickRegR(s, before, after);
+          var foundGlobalImport:Bool =
+              new EReg("import " + topkg_pattern + "\\.\\*;", "g").match(s);
+          completedGlobalImports.set(topkg, foundGlobalImport);
+        }
+        if (completedGlobalImports.get(topkg)) {
+          // then just delete the whole line if it's there
+          s = quickRegR(s, "^import " + frompkg_pattern + "\\." + className + ";\r?\n", "", "gm");
+        } else {
+          // otherwise take the old (bad) line and replace it with the new one
+          var before:String = "^(import )(" + frompkg_pattern + "\\.)(" + className + ");";
+          s = quickRegR(s, before, "$1" + topkg + ".$3;", "gm");
+        }
+      }
+      return s;
     }
 
     private function classExtends(s:String, parentClass:String):Bool
