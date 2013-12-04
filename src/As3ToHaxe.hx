@@ -109,7 +109,7 @@ class As3ToHaxe
         var toFile = to + "/" + file.substr(from.length + 1, file.lastIndexOf(".") - (from.length)) + "hx";
 
         /* -----------------------------------------------------------*/
-        // create the folder if it doesn''t exist
+        // create the folder if it doesn't exist
         var dir = toFile.substr(0, toFile.lastIndexOf("/"));
         createFolder(dir);
 
@@ -140,7 +140,7 @@ class As3ToHaxe
         //s = quickRegR(s, "\t\t", "\t");
         
         /* -----------------------------------------------------------*/
-        // some quick setup, finding what we''ve got
+        // some quick setup, finding what we've got
         var className = quickRegM(s, "public class([ ]*)([A-Z][a-zA-Z0-9_]*)", 2)[1];
         
         /* -----------------------------------------------------------*/
@@ -353,6 +353,11 @@ class As3ToHaxe
         // change const to inline statics
         s = quickRegR(s, "([\n\t ]+)(public|private)([ ]*)const([ ]+)([a-zA-Z0-9_]+)([ ]*):", "$1$2$3static inline var$4$5$6:");
         s = quickRegR(s, "([\n\t ]+)(public|private)([ ]*)(static)*([ ]+)const([ ]+)([a-zA-Z0-9_]+)([ ]*):", "$1$2$3$4$5inline var$6$7$8:");
+
+        // remove 'inline' from certain static variables that have invalid initializers
+        var inlinePattern:String = "(public|private)[ ]+(static)[ ]+inline (var[a-zA-Z0-9_:<> ]+)";
+        var invalidInitializers:String = "\\[.*\\]";
+        s = quickRegR(s, '$inlinePattern=($invalidInitializers)', "$1 $2 $3=$4");
         
         /* -----------------------------------------------------------*/
         // change local const to var
@@ -538,9 +543,9 @@ class As3ToHaxe
           s = quickRegR(s, "FlxG\\.removeBitmap\\(", "FlxG.bitmap.remove(");
 
           // Camera frontend
+          s = quickRegR(s, "FlxG\\.cameras", "FlxG.cameras.list");
           s = quickRegR(s, "FlxG\\.addCamera\\(", "FlxG.cameras.add(");
           s = quickRegR(s, "FlxG\\.bgColor", "FlxG.cameras.bgColor");
-          s = quickRegR(s, "FlxG\\.cameras", "FlxG.cameras.list");
           s = quickRegR(s, "FlxG\\.fade\\(", "FlxG.cameras.fade(");
           s = quickRegR(s, "FlxG\\.flash\\(", "FlxG.cameras.flash(");
           s = quickRegR(s, "FlxG\\.lockCameras\\(", "FlxG.cameras.lock(");
@@ -651,12 +656,28 @@ class As3ToHaxe
 
 
         /* -----------------------------------------------------------*/
-                
+        // prettification! needs to be last
+
         // use spaces instead of tab
-        if(useSpaces == "true")
+        if (useSpaces == "true")
         {
             s = quickRegR(s, "\t", "    ");
         }
+
+        // TODO(dremelofdeath): Hm, perhaps this should just be another tool...
+        var allSingleCharacterRegex:String = "=";  // Just ignore most of these.
+        var allDoubleCharacterRegex:String = "==|\\!=|<=|\\+=|-=|\\*=|/=|%=|&=|\\|=|^=|&&|\\|\\|";
+        // We are just going to hope and pray for the bitwise operators and greater than, since they
+        // can collide with type parameterization.  Also, don't check - since it can be a unary
+        // operator.
+        s = quickRegR(s, ' ?($allSingleCharacterRegex) ?', "$1");
+        s = quickRegR(s, ' ?($allDoubleCharacterRegex) ?', "$1");
+        s = quickRegR(s, '([^ =!+\\-*/%&|^<>])($allSingleCharacterRegex)([^ \r\n\t=])', "$1 $2 $3");
+        s = quickRegR(s, '([^ ])($allDoubleCharacterRegex)([^ \r\n\t])', "$1 $2 $3");
+        s = quickRegR(s, '([^ ])($allDoubleCharacterRegex)([^ \r\n\t])', "$1 $2 $3");
+        var allNonFunctionExpressionsRegex:String = "if|for|while";
+        s = quickRegR(s, '($allNonFunctionExpressionsRegex)\\(', "$1 (");
+        s = quickRegR(s, "\\)([a-zA-Z0-9{])", ") $1");
 
         return s;
     }
