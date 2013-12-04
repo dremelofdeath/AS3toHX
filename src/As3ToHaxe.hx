@@ -623,6 +623,30 @@ class As3ToHaxe
             s = quickRegR(s, "((this\\.)?)randomFrame\\(", "$1animation.randomFrame(");
             s = quickRegR(s, "((this\\.)?)updateAnimation\\(", "$1animation.update(");
           }
+
+          // Now we need to deal with the fact that we might need to import these new classes
+          // TODO(dremelofdeath): Might be nice to make this (and things like it) a loop?
+          s = maybeAddNewSingleClassImport(s, "flixel.util", "FlxAngle", "flixel", gi, agi);
+          s = maybeAddNewSingleClassImport(s, "flixel.util", "FlxArrayUtil", "flixel", gi, agi);
+          s = maybeAddNewSingleClassImport(s, "flixel.util", "FlxBitmapUtil", "flixel", gi, agi);
+          s = maybeAddNewSingleClassImport(s, "flixel.util", "FlxCollision", "flixel", gi, agi);
+          s = maybeAddNewSingleClassImport(s, "flixel.util", "FlxColor", "flixel", gi, agi);
+          s = maybeAddNewSingleClassImport(s, "flixel.util", "FlxColorUtil", "flixel", gi, agi);
+          s = maybeAddNewSingleClassImport(s, "flixel.util", "FlxGradient", "flixel", gi, agi);
+          s = maybeAddNewSingleClassImport(s, "flixel.util", "FlxMath", "flixel", gi, agi);
+          s = maybeAddNewSingleClassImport(s, "flixel.util", "FlxMisc", "flixel", gi, agi);
+          s = maybeAddNewSingleClassImport(s, "flixel.util", "FlxPath", "flixel", gi, agi);
+          s = maybeAddNewSingleClassImport(s, "flixel.util", "FlxPoint", "flixel", gi, agi);
+          s = maybeAddNewSingleClassImport(s, "flixel.util", "FlxPool", "flixel", gi, agi);
+          s = maybeAddNewSingleClassImport(s, "flixel.util", "FlxRandom", "flixel", gi, agi);
+          s = maybeAddNewSingleClassImport(s, "flixel.util", "FlxRect", "flixel", gi, agi);
+          s = maybeAddNewSingleClassImport(s, "flixel.util", "FlxSave", "flixel", gi, agi);
+          s = maybeAddNewSingleClassImport(s, "flixel.util", "FlxSoundUtil", "flixel", gi, agi);
+          s = maybeAddNewSingleClassImport(s, "flixel.util", "FlxSpriteUtil", "flixel", gi, agi);
+          s = maybeAddNewSingleClassImport(s, "flixel.util", "FlxStringUtil", "flixel", gi, agi);
+          s = maybeAddNewSingleClassImport(s, "flixel.util", "FlxTimer", "flixel", gi, agi);
+          s = maybeAddNewSingleClassImport(s, "flixel.util", "FlxVector", "flixel", gi, agi);
+          s = maybeAddNewSingleClassImport(s, "flixel.util", "FlxVelocity", "flixel", gi, agi);
         }
 
 
@@ -637,6 +661,30 @@ class As3ToHaxe
         return s;
     }
 
+    private function maybeAddGlobalImport(s:String, frompkg_pattern:Null<String>, topkg:String,
+        globalImports:Map<String, Bool>, completedGlobalImports:Map<String, Bool>):String {
+      // NOTE: This could get confusing... frompkg_pattern here is expected, NOT frompkg.
+      // This is despite this function expecting topkg, and NOT topkg_pattern.
+      var topkg_pattern:String = quickRegR(topkg, "\\.", "\\\\.");
+      if (!globalImports.get(topkg)) {
+        globalImports.set(topkg, true);
+        var before:String = "(import .+)$";
+        if (frompkg_pattern != null) {
+          before = "(import " + frompkg_pattern + "\\.)\\*;";
+        }
+        // God this is convoluted
+        var after:String = "$1\nimport " + topkg + ".*;";
+        if (frompkg_pattern != null) {
+          after = "$1*;\nimport " + topkg + ".*;";
+        }
+        s = quickRegR(s, before, after, "");
+        var foundGlobalImport:Bool =
+            new EReg("import " + topkg_pattern + "\\.\\*;", "g").match(s);
+        completedGlobalImports.set(topkg, foundGlobalImport);
+      }
+      return s;
+    }
+
     private function convertImportForSingleClass(
         s:String, frompkg:String, topkg:String, className:String,
         globalImports:Map<String, Bool>, completedGlobalImports:Map<String, Bool>):String {
@@ -644,15 +692,7 @@ class As3ToHaxe
       var frompkg_pattern:String = quickRegR(frompkg, "\\.", "\\\\.");
       var topkg_pattern:String = quickRegR(topkg, "\\.", "\\\\.");
       if (new EReg(className, "g").match(s)) {
-        if (!globalImports.get(topkg)) {
-          globalImports.set(topkg, true);
-          var before:String = "(import " + frompkg_pattern + "\\.)\\*;";
-          var after:String = "$1*;\nimport " + topkg + ".*;";
-          s = quickRegR(s, before, after);
-          var foundGlobalImport:Bool =
-              new EReg("import " + topkg_pattern + "\\.\\*;", "g").match(s);
-          completedGlobalImports.set(topkg, foundGlobalImport);
-        }
+        s = maybeAddGlobalImport(s, frompkg_pattern, topkg, globalImports, completedGlobalImports);
         if (completedGlobalImports.get(topkg)) {
           // then just delete the whole line if it's there
           s = quickRegR(s, "^import " + frompkg_pattern + "\\." + className + ";\r?\n", "", "gm");
@@ -660,6 +700,25 @@ class As3ToHaxe
           // otherwise take the old (bad) line and replace it with the new one
           var before:String = "^(import )(" + frompkg_pattern + "\\.)(" + className + ");";
           s = quickRegR(s, before, "$1" + topkg + ".$3;", "gm");
+        }
+      }
+      return s;
+    }
+
+    private function maybeAddNewSingleClassImport(
+        s:String, pkg:String, className:String, follow_pkg:Null<String>,
+        globalImports:Map<String, Bool>, completedGlobalImports:Map<String, Bool>):String {
+      var follow_pkg_pattern:Null<String> = null;
+      if (follow_pkg != null) {
+        follow_pkg_pattern = quickRegR(follow_pkg, "\\.", "\\\\.");
+      }
+      if (new EReg(className, "g").match(s)) {
+        s = maybeAddGlobalImport(s, follow_pkg_pattern, pkg, globalImports, completedGlobalImports);
+        if (!completedGlobalImports.get(pkg)) {
+          // then we need to add the individual class line ourselves
+          var before:String = "(import .+)$";
+          var after:String = "$1\nimport " + pkg + "." + className + ";";
+          s = quickRegR(s, before, after, "");
         }
       }
       return s;
