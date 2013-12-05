@@ -751,6 +751,12 @@ class As3ToHaxe
         s = quickRegR(s, "(?<!//)(.+)\\?([^ ].+:)", "$1? $2");
         s = quickRegR(s, "(?<!//)(.+\\?.+[^ ]):", "$1 :");
         s = quickRegR(s, "(?<!//)(.+\\?.+):(?! )", "$1: ");
+        // And try our hardest with the difficult ones by making a few guesses/assumptions.
+        s = quickRegR(s, "(?<=var)(.+[^ ])=([^ ])", "$1 = $2");
+        s = quickRegR(s, "(?<=if \\()(.+[^ ])>=([^ ])", "$1 >= $2");
+        s = quickRegR(s, "(?<=if \\()(.+[^ ])(<|>)([^ =])", "$1 $2 $3");
+        s = quickRegR(s, "(?<=return )(.+[^ ])>=([^ ])", "$1 >= $2");
+        s = quickRegR(s, "(?<=return )(.+[^ ])(<|>)([^ =])", "$1 $2 $3");
 
         return s;
     }
