@@ -507,14 +507,30 @@ class As3ToHaxe
 
           // Generic FlxG constants, etc., that moved to separate classes or were renamed
           s = quickRegR(s, "FlxG\\.getLibraryName\\(\\)", "FlxG.libraryName");
+          
+          // Haxe Math
+          s = quickRegR(s, "FlxU\\.abs\\(", "Math.abs(");
+          s = quickRegR(s, "FlxU\\.ceil\\(", "Math.ceil(");
+          s = quickRegR(s, "FlxU\\.floor\\(", "Math.floor(");
+          s = quickRegR(s, "FlxU\\.max\\(", "Math.max(");
+          s = quickRegR(s, "FlxU\\.min\\(", "Math.min(");
+          s = quickRegR(s, "FlxU\\.round\\(", "Math.round(");
+
+          // Haxe Type
+          s = quickRegR(s, "FlxU\\.getClass\\(", "Type.resolveClass(");
+          s = quickRegR(s, "FlxU\\.getClassName\\(", "Type.getClassName(");
 
           // FlxAngle
           s = quickRegR(s, "FlxG\\.DEG", "FlxAngle.TO_DEG");
           s = quickRegR(s, "FlxG\\.RAD", "FlxAngle.TO_RAD");
+          s = quickRegR(s, "FlxU\\.getAngle\\(", "FlxAngle.getAngle(");
+          s = quickRegR(s, "FlxU\\.rotatePoint\\(", "FlxAngle.rotatePoint(");
 
           // FlxArrayUtil
           s = quickRegR(s, "FlxG\\.getRandom\\(", "FlxArrayUtil.getRandom(");
           s = quickRegR(s, "FlxG\\.shuffle\\(", "FlxArrayUtil.shuffle(");
+          s = quickRegR(s, "FlxU\\.getRandom\\(", "FlxArrayUtil.getRandom(");
+          s = quickRegR(s, "FlxU\\.shuffle\\(", "FlxArrayUtil.shuffle(");
 
           // FlxColor
           s = quickRegR(s, "FlxG\\.BLACK", "FlxColor.BLACK");
@@ -525,6 +541,12 @@ class As3ToHaxe
           s = quickRegR(s, "FlxG\\.TRANSPARENT", "FlxColor.TRANSPARENT");
           s = quickRegR(s, "FlxG\\.WHITE", "FlxColor.WHITE");
 
+          // FlxColorUtil
+          s = quickRegR(s, "FlxU\\.getHSB\\(", "FlxColorUtil.getHSBA(");
+          s = quickRegR(s, "FlxU\\.getRGBA\\(", "FlxColorUtil.getRGBA(");
+          s = quickRegR(s, "FlxU\\.makeColor\\(", "FlxColorUtil.makeFromRGBA(");
+          s = quickRegR(s, "FlxU\\.makeColorFromHSB\\(", "FlxColorUtil.makeFromHSBA(");
+
           // FlxDebugger
           s = quickRegR(s, "FlxG\\.DEBUGGER_BIG", "FlxDebugger.BIG");
           s = quickRegR(s, "FlxG\\.DEBUGGER_LEFT", "FlxDebugger.LEFT");
@@ -533,23 +555,40 @@ class As3ToHaxe
           s = quickRegR(s, "FlxG\\.DEBUGGER_STANDARD", "FlxDebugger.STANDARD");
           s = quickRegR(s, "FlxG\\.DEBUGGER_TOP", "FlxDebugger.TOP");
 
+          // FlxMath
+          s = quickRegR(s, "FlxU\\.bound\\(", "FlxMath.bound(");
+          s = quickRegR(s, "FlxU\\.computeVelocity\\(", "FlxMath.computeVelocity(");
+          s = quickRegR(s, "FlxU\\.getDistance\\(", "FlxMath.getDistance(");
+
+          // FlxMisc
+          // TODO(dremelofdeath): getTicks() changed to an instance variable on FlxGame.
+          s = quickRegR(s, "FlxU\\.compareClassNames\\(", "FlxMisc.compareClassNames(");
+          s = quickRegR(s, "FlxU\\.openURL\\(", "FlxMisc.openUrl(");
+
           // FlxRandom
           s = quickRegR(s, "FlxG\\.random\\(", "FlxRandom.float(");
           s = quickRegR(s, "FlxG\\.globalSeed", "FlxRandom.globalSeed");
+          s = quickRegR(s, "FlxU\\.srand\\(", "FlxRandom.srand(");
 
           // FlxSpriteUtil
-          s = quickRegR(s, "FlxG\\.flashGfx", "FlxSpriteUtil.flashGfx");
           s = quickRegR(s, "FlxG\\.flashGfxSprite", "FlxSpriteUtil.flashGfxSprite");
+          s = quickRegR(s, "FlxG\\.flashGfx", "FlxSpriteUtil.flashGfx");
+
+          // FlxStringUtil
+          s = quickRegR(s, "FlxU\\.formatArray\\(", "FlxStringUtil.formatArray(");
+          s = quickRegR(s, "FlxU\\.formatMoney\\(", "FlxStringUtil.formatMoney(");
+          s = quickRegR(s, "FlxU\\.formatTicks\\(", "FlxStringUtil.formatTicks(");
+          s = quickRegR(s, "FlxU\\.formatTime\\(", "FlxStringUtil.formatTime(");
 
           // FlxTween
           s = quickRegR(s, "FlxG\\.tween\\(", "FlxTween.multiVar(");
 
           // Reg
           s = quickRegR(s, "FlxG\\.levels", "Reg.levels");
-          s = quickRegR(s, "FlxG\\.save", "Reg.save");
           s = quickRegR(s, "FlxG\\.saves", "Reg.saves");
-          s = quickRegR(s, "FlxG\\.score", "Reg.score");
+          s = quickRegR(s, "FlxG\\.save", "Reg.save");
           s = quickRegR(s, "FlxG\\.scores", "Reg.scores");
+          s = quickRegR(s, "FlxG\\.score", "Reg.score");
 
           // Convert to using frontends in HaxeFlixel
 
