@@ -45,12 +45,14 @@ using As3ToHaxe;
  */
 class As3ToHaxe
 {
-    public static var keys = ["-from", "-to", "-remove", "-useSpaces", "-flixelSpecific"];
+    public static var keys =
+      ["-from", "-to", "-remove", "-useSpaces", "-flixelSpecific", "-embedToString"];
     
     var to:String;
     var from:String; 
     var useSpaces:String;
     var flixelSpecific:String;
+    var embedToString:String;
     var remove:String;
     var sysargs:Array<String>;
     
@@ -219,9 +221,18 @@ class As3ToHaxe
         // comment out standard metadata
         s = quickRegR(s, "\\[SWF\\(", "//[SWF("); 
         s = quickRegR(s, "\\[Bindable\\(", "//[Bindable("); 
-        s = quickRegR(s, "\\[Embed\\(", "//[Embed(");
         s = quickRegR(s, "\\[Event\\(", "//[Event(");
         s = quickRegR(s, "\\[Frame\\(", "//[Frame(");
+
+        if (embedToString == "true") {
+          var varNamePattern:String =
+            "(public|private|protected)([ ]+static[ ]+var[ ]+[a-zA-Z0-9_]+):Class.*?;";
+          var embedPattern:String = "\\[Embed\\(source[ ]*=[ ]*\"(.+?)\"\\)\\]";
+          s = quickRegR(s, '$embedPattern.*?$varNamePattern', "$2$3:String = \"$1\";", "gms");
+        } else {
+          // otherwise just comment it out like the rest of the metadata
+          s = quickRegR(s, "\\[Embed\\(", "//[Embed(");
+        }
         
         /* -----------------------------------------------------------*/    
         // simple typing
@@ -830,7 +841,9 @@ class As3ToHaxe
         if (to == null) { Lib.println("Missing argument '-to'"); return false; }
         if (from == null) { Lib.println("Missing argument '-from'"); return false; }
 
+        // TODO(dremelofdeath): Can't we just make these booleans?
         if (flixelSpecific == null) { flixelSpecific = "true"; }
+        if (embedToString == null) { embedToString = "true"; }
         
         return true;
     }
