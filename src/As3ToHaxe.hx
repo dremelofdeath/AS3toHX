@@ -483,6 +483,16 @@ class As3ToHaxe
           s = convertImportForSingleClass(s, "flixel", "flixel.text", "FlxText", gi, agi);
           s = convertImportForSingleClass(s, "flixel", "flixel.tile", "FlxTilemap", gi, agi);
           s = convertImportForSingleClass(s, "flixel", "flixel.tile", "FlxTile", gi, agi);
+          s = convertImportForSingleClass(
+              s, "flixel", "flixel.effects.particles", "FlxEmitterExt", gi, agi);
+          s = convertImportForSingleClass(
+              s, "flixel", "flixel.effects.particles", "FlxEmitter", gi, agi);
+          s = convertImportForSingleClass(
+              s, "flixel", "flixel.effects.particles", "FlxParticle", gi, agi);
+          s = convertImportForSingleClass(
+              s, "flixel", "flixel.effects.particles", "FlxTypedEmitterExt", gi, agi);
+          s = convertImportForSingleClass(
+              s, "flixel", "flixel.effects.particles", "FlxTypedEmitter", gi, agi);
 
           // Generic FlxG constants, etc., that moved to separate classes or were renamed
           s = quickRegR(s, "FlxG\\.getLibraryName\\(\\)", "FlxG.libraryName");
@@ -576,32 +586,32 @@ class As3ToHaxe
           s = quickRegR(s, "FlxG\\.warn\\(", "FlxG.log.warn(");
 
           // Plugins frontend
+          s = quickRegR(s, "FlxG\\.plugins", "FlxG.plugins.list");
           s = quickRegR(s, "FlxG\\.addPlugin\\(", "FlxG.plugins.add(");
           s = quickRegR(s, "FlxG\\.drawPlugins\\(", "FlxG.plugins.draw(");
           s = quickRegR(s, "FlxG\\.getPlugin\\(", "FlxG.plugins.get(");
-          s = quickRegR(s, "FlxG\\.plugins", "FlxG.plugins.list");
           s = quickRegR(s, "FlxG\\.removePlugin\\(", "FlxG.plugins.remove(");
           s = quickRegR(s, "FlxG\\.removePluginType\\(", "FlxG.plugins.removeType(");
           s = quickRegR(s, "FlxG\\.updatePlugins\\(", "FlxG.plugins.update(");
 
           // Sounds frontend
+          s = quickRegR(s, "FlxG\\.sounds", "FlxG.sound.list");
           s = quickRegR(s, "FlxG\\.addSound\\(", "FlxG.sound.add(");
-          s = quickRegR(s, "FlxG\\.destroySounds\\(", "FlxG.sounds.destroySounds(");
+          s = quickRegR(s, "FlxG\\.destroySounds\\(", "FlxG.sound.destroySounds(");
           s = quickRegR(s, "FlxG\\.keyMute", "FlxG.sound.keyMute");
           s = quickRegR(s, "FlxG\\.keyVolumeDown", "FlxG.sound.keyVolumeDown");
           s = quickRegR(s, "FlxG\\.keyVolumeUp", "FlxG.sound.keyVolumeUp");
-          s = quickRegR(s, "FlxG\\.loadSound\\(", "FlxG.sounds.load(");
-          s = quickRegR(s, "FlxG\\.music", "FlxG.sounds.music");
-          s = quickRegR(s, "FlxG\\.mute", "FlxG.sounds.muted");
-          s = quickRegR(s, "FlxG\\.pauseSounds\\(", "FlxG.sounds.pauseSounds(");
-          s = quickRegR(s, "FlxG\\.play\\(", "FlxG.sounds.play(");
-          s = quickRegR(s, "FlxG\\.playMusic\\(", "FlxG.sounds.playMusic(");
-          s = quickRegR(s, "FlxG\\.resumeSounds\\(", "FlxG.sounds.resumeSounds(");
-          s = quickRegR(s, "FlxG\\.sounds", "FlxG.sounds.list");
-          s = quickRegR(s, "FlxG\\.stream\\(", "FlxG.sounds.stream(");
-          s = quickRegR(s, "FlxG\\.updateSounds\\(", "FlxG.sounds.updateSounds(");
-          s = quickRegR(s, "FlxG\\.volume", "FlxG.sounds.volume");
-          s = quickRegR(s, "FlxG\\.volumeHandler", "FlxG.sounds.volumeHandler");
+          s = quickRegR(s, "FlxG\\.loadSound\\(", "FlxG.sound.load(");
+          s = quickRegR(s, "FlxG\\.music", "FlxG.sound.music");
+          s = quickRegR(s, "FlxG\\.mute", "FlxG.sound.muted");
+          s = quickRegR(s, "FlxG\\.pauseSounds\\(", "FlxG.sound.pauseSounds(");
+          s = quickRegR(s, "FlxG\\.play\\(", "FlxG.sound.play(");
+          s = quickRegR(s, "FlxG\\.playMusic\\(", "FlxG.sound.playMusic(");
+          s = quickRegR(s, "FlxG\\.resumeSounds\\(", "FlxG.sound.resumeSounds(");
+          s = quickRegR(s, "FlxG\\.stream\\(", "FlxG.sound.stream(");
+          s = quickRegR(s, "FlxG\\.updateSounds\\(", "FlxG.sound.updateSounds(");
+          s = quickRegR(s, "FlxG\\.volume", "FlxG.sound.volume");
+          s = quickRegR(s, "FlxG\\.volumeHandler", "FlxG.sound.volumeHandler");
 
           // VCR frontend
           s = quickRegR(s, "FlxG\\.loadReplay\\(", "FlxG.vcr.loadReplay(");
@@ -628,6 +638,13 @@ class As3ToHaxe
             s = quickRegR(s, "((this\\.)?)randomFrame\\(", "$1animation.randomFrame(");
             s = quickRegR(s, "((this\\.)?)updateAnimation\\(", "$1animation.update(");
           }
+
+          s = quickRegR(s, "(FlxG\\.keys\\.)([A-Z0-9]+)", "$1pressed.$2");
+          s = quickRegR(s, "(FlxG\\.keys\\.)any\\(\\)", "$1pressed.ANY");
+          s = quickRegR(s, "(FlxG\\.keys\\.justPressed)\\(\"([A-Z0-9]+)\"\\)", "$1.$2");
+          s = quickRegR(s, "(FlxG\\.keys\\.justReleased)\\(\"([A-Z0-9]+)\"\\)", "$1.$2");
+
+          s = quickRegR(s, "(FlxG\\.mouse\\.)(pressed|justPressed|justReleased)\\(\\)", "$1$2");
 
           // Now we need to deal with the fact that we might need to import these new classes
           // TODO(dremelofdeath): Might be nice to make this (and things like it) a loop?
@@ -677,7 +694,8 @@ class As3ToHaxe
         s = quickRegR(s, '([^ ])($allDoubleCharacterRegex)([^ \r\n\t])', "$1 $2 $3");
         var allNonFunctionExpressionsRegex:String = "if|for|while";
         s = quickRegR(s, '($allNonFunctionExpressionsRegex)\\(', "$1 (");
-        s = quickRegR(s, "\\)([a-zA-Z0-9{])", ") $1");
+        s = quickRegR(s, "\\)([a-zA-Z0-9{=+\\-*/%&|^<>])", ") $1");
+        s = quickRegR(s, "([}=+\\-*/%&|^<>])\\(", "$1 (");
 
         return s;
     }
