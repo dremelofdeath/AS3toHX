@@ -746,6 +746,11 @@ class As3ToHaxe
         s = quickRegR(s, '($allNonFunctionExpressionsRegex)\\(', "$1 (");
         s = quickRegR(s, "\\)([a-zA-Z0-9{=+\\-*/%&|^<>])", ") $1");
         s = quickRegR(s, "([}=+\\-*/%&|^<>])\\(", "$1 (");
+        // Space out the ternary conditionals properly.
+        s = quickRegR(s, "(?<!//)(.+[^ ])\\?(.+:)", "$1 ?$2");
+        s = quickRegR(s, "(?<!//)(.+)\\?([^ ].+:)", "$1? $2");
+        s = quickRegR(s, "(?<!//)(.+\\?.+[^ ]):", "$1 :");
+        s = quickRegR(s, "(?<!//)(.+\\?.+):(?! )", "$1: ");
 
         return s;
     }
