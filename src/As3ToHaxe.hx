@@ -367,7 +367,7 @@ class As3ToHaxe
 
         // remove 'inline' from certain static variables that have invalid initializers
         var inlinePattern:String = "(public|private)[ ]+(static)[ ]+inline (var[a-zA-Z0-9_:<> ]+)";
-        var invalidInitializers:String = "\\[.*\\]";
+        var invalidInitializers:String = "\\[.*\\]|{.*}|new .+;";
         s = quickRegR(s, '$inlinePattern=($invalidInitializers)', "$1 $2 $3=$4");
         
         /* -----------------------------------------------------------*/
@@ -741,11 +741,14 @@ class As3ToHaxe
         s = quickRegR(s, ' ?($allDoubleCharacterRegex) ?', "$1");
         s = quickRegR(s, '([^ =!+\\-*/%&|^<>])($allSingleCharacterRegex)([^ \r\n\t=])', "$1 $2 $3");
         s = quickRegR(s, '([^ ])($allDoubleCharacterRegex)([^ \r\n\t])', "$1 $2 $3");
+        // Yes, this is here twice... this is intentional.
         s = quickRegR(s, '([^ ])($allDoubleCharacterRegex)([^ \r\n\t])', "$1 $2 $3");
         var allNonFunctionExpressionsRegex:String = "if|for|while";
         s = quickRegR(s, '($allNonFunctionExpressionsRegex)\\(', "$1 (");
         s = quickRegR(s, "\\)([a-zA-Z0-9{=+\\-*/%&|^<>])", ") $1");
         s = quickRegR(s, "([}=+\\-*/%&|^<>])\\(", "$1 (");
+        // The previous regex messes up 'new Whatever<Type>()', so put that back together here.
+        s = quickRegR(s, "(new [a-zA-Z0-9_]+<.+>)[ ]+\\(", "$1(");
         // Space out the ternary conditionals properly.
         s = quickRegR(s, "(?<!//)(.+[^ ])\\?(.+:)", "$1 ?$2");
         s = quickRegR(s, "(?<!//)(.+)\\?([^ ].+:)", "$1? $2");
