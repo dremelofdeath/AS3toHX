@@ -760,6 +760,8 @@ class As3ToHaxe
         s = quickRegR(s, "(?<=if \\()(.+[^ ])(<|>)([^ =])", "$1 $2 $3");
         s = quickRegR(s, "(?<=return )(.+[^ ])>=([^ ])", "$1 >= $2");
         s = quickRegR(s, "(?<=return )(.+[^ ])(<|>)([^ =])", "$1 $2 $3");
+        // Nicely space out terminal comments.
+        s = quickRegR(s, ";[ \t]*//", ";  //");  // two spaces
 
         return s;
     }
