@@ -134,6 +134,12 @@ class As3ToHaxe
     {
         var b = 0;
 
+        // what kind of line endings do we have here?
+        var posFirstDosLineEnding = s.indexOf("\r\n");
+        var posFirstLineEnding = s.indexOf("\n");
+        var usingDosLineEndings:Bool =
+            posFirstDosLineEnding != -1 && posFirstDosLineEnding < posFirstLineEnding;
+
         /* -----------------------------------------------------------*/
         // space to tabs      
         s = quickRegR(s, "    ", "\t");
@@ -478,7 +484,70 @@ class As3ToHaxe
 
         // remove invalid imports
         s = quickRegR(s, "^import flash\\.[a-z]+\\.[a-z][a-zA-Z0-9_]*;\r?\n", "", "gm");
-                
+
+        // move non-constant, non-static initializers into the construtor
+        var init_pattern:String =
+            "(public|private)( +var +)([a-zA-Z0-9_]+)(:[a-zA-Z0-9_<>]+)( *=[ \r\n\t]*?new.*?)";
+        var lines:Array<String> = s.split(";");
+        var initializers:String = "";
+        var init_reg_pattern = new EReg(init_pattern, "gms");
+        for (line in lines) {
+          if (init_reg_pattern.match(line)) {
+            initializers += line + ';';
+          }
+        }
+        initializers = quickRegR(initializers, init_pattern, "$3$5", "gms");
+        initializers = quickRegR(initializers, "^[ \t]*", "", "gm");
+        initializers = quickRegR(initializers, "^\r?\n", "", "m");
+        if (initializers.length > 0) {
+          s = quickRegR(s, '$init_pattern;', "$1$2$3$4;", "gms");
+          var constructor_pattern:String = "(public|private)( +function +new(.*?)[ \r\n\t]*{)";
+          if (new EReg(constructor_pattern, "gm").match(s)) {
+            if (new EReg('$constructor_pattern[ \t]*[\r\n]+[ \t]+', "gm").match(s)) {
+              // normal, nicely indented constructor
+              var spacing:String =
+                  quickRegR(s, '.*$constructor_pattern[^\r\n]*?\r?\n(.*?)[\r\n]+.*', "$4", "gms");
+              spacing = quickRegR(spacing, "[^ \t]", "");
+              initializers = quickRegR(initializers, "(.*)", '$spacing$1');
+              s = quickRegR(s, constructor_pattern, '$1$2\n$initializers\n');
+            } else {
+              // possibly empty or single-line constructor here?
+              var single_line_reg:EReg = new EReg('$constructor_pattern[ \r\n\t]*?}', "gms");
+              if (single_line_reg.match(s)) {
+                // empty constructor
+                var spacing:String =
+                    quickRegR(s, '.*([ \t]+)$constructor_pattern.*', "$1", "gms");
+                // okay, to be honest, I don't know why this spacing part works here
+                spacing = quickRegR(spacing, "[^ \t]", "");
+                initializers = quickRegR(initializers, "(.*)", '$spacing$1');
+                s = quickRegR(s, single_line_reg, '$1$2$initializers\n$spacing}');
+              } else {
+                // non-empty oneliner... gah, why do you have to make my life difficult?!
+                // TODO(dremelofdeath): I'm not doing this right now. Our code doesn't need it...
+                trace("warning: not fixing initializers for non-empty single line constructor");
+              }
+            }
+          } else {
+            // we have initializers to move, but there's no pre-existing constructor
+            var function_pattern:String =
+                "((override )?)(public|private)( +function +[a-zA-Z0-9_]+(.*?)[ \r\n\t]*{)";
+            var decl_spacing:String =
+                quickRegR(s, '.*([ \t]+)$function_pattern.*', "$1", "ms");
+            decl_spacing = quickRegR(decl_spacing, "[^ \t]", "");
+            var body_spacing:String =
+                quickRegR(s, '.*$function_pattern[^\r\n]*?\r?\n(.*?)[\r\n]+.*', "$4", "ms");
+            body_spacing = quickRegR(body_spacing, "[^ \t]", "");
+            // we will put a new constructor directly above the first function in the file
+            initializers = quickRegR(initializers, "^(.*)$", '$body_spacing$1', "gm");
+            var constructor_body:String =
+                'public function new() {\n$initializers\n$decl_spacing}\n\n';
+            var func_comment_pattern:String =
+                '(/\\*(.(?!/\\*))*?\\*/(.(?!/\\*))*?)$function_pattern';
+            s = quickRegR(s, func_comment_pattern, '$constructor_body$decl_spacing$1$4$6$7', "ms");
+            trace('else case - $file');
+          }
+        }
+
         /* -----------------------------------------------------------*/
 
         // Flixel-specific things
@@ -762,6 +831,13 @@ class As3ToHaxe
         s = quickRegR(s, "(?<=return )(.+[^ ])(<|>)([^ =])", "$1 $2 $3");
         // Nicely space out terminal comments.
         s = quickRegR(s, ";[ \t]*//", ";  //");  // two spaces
+
+        // Standardize line endings.
+        if (usingDosLineEndings) {
+          s = quickRegR(s, "(?<!\r)\n", "\r\n", "gm");
+        } else {
+          s = quickRegR(s, "\r\n", "\n", "gm");
+        }
 
         return s;
     }
