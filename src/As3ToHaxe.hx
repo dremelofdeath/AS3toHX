@@ -487,7 +487,8 @@ class As3ToHaxe
 
         // move non-constant, non-static initializers into the construtor
         var init_pattern:String =
-            "(public|private)( +var +)([a-zA-Z0-9_]+)(:[a-zA-Z0-9_<>]+)( *=[ \r\n\t]*?new.*?)";
+            "(public|private)( +var +)"
+            + "([a-zA-Z0-9_]+)(:[a-zA-Z0-9_<>]+)( *=[ \r\n\t]*?(new|\\[|{).*?)";
         var lines:Array<String> = s.split(";");
         var initializers:String = "";
         var init_reg_pattern = new EReg(init_pattern, "gms");
