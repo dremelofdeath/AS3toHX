@@ -232,9 +232,10 @@ class As3ToHaxe
 
         if (embedToString == "true") {
           var varNamePattern:String =
-            "(public|private|protected)([ ]+static[ ]+var[ ]+[a-zA-Z0-9_]+):Class.*?;";
-          var embedPattern:String = "\\[Embed\\(source[ ]*=[ ]*\"(.+?)\"\\)\\]";
-          s = quickRegR(s, '$embedPattern.*?$varNamePattern', "$2$3:String = \"$1\";", "gms");
+            "(public|private|protected)( +(static +)?var +[a-zA-Z0-9_]+):Class.*?;";
+          var extraDataPattern:String = "(, [a-zA-Z0-9_]+ *= *[a-zA-Z0-9_.+\\-*/%\\\\\"'(){}<>]+)*";
+          var embedPattern:String = '\\[Embed\\(source *= *\"(.+?)\"$extraDataPattern\\)\\]';
+          s = quickRegR(s, '$embedPattern.*?$varNamePattern', "$3$4:String = \"$1\";", "gms");
         } else {
           // otherwise just comment it out like the rest of the metadata
           s = quickRegR(s, "\\[Embed\\(", "//[Embed(");
