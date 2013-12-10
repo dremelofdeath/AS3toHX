@@ -546,7 +546,6 @@ class As3ToHaxe
             var func_comment_pattern:String =
                 '(/\\*(.(?!/\\*))*?\\*/(.(?!/\\*))*?)$function_pattern';
             s = quickRegR(s, func_comment_pattern, '$constructor_body$decl_spacing$1$4$6$7', "ms");
-            trace('else case - $file');
           }
         }
 
